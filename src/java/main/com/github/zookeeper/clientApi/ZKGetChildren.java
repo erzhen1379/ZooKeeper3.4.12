@@ -13,6 +13,8 @@ public class ZKGetChildren implements Watcher {
     public static void main(String[] args) throws Exception {
 
         String path = "/zk-book";
+
+        
         zk = new ZooKeeper("172.16.3.200:2181", 5000, new ZKGetChildren());
         connectedSemaphore.await();
         zk.create(path, "".getBytes(),
