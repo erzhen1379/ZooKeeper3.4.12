@@ -22,10 +22,17 @@ package org.apache.zookeeper.proto;
 import org.apache.jute.*;
 import org.apache.yetus.audience.InterfaceAudience;
 
+/**
+ * 请求体
+ *
+ */
 @InterfaceAudience.Public
 public class ConnectRequest implements Record {
+    //协议版本号
     private int protocolVersion;
+    //最近一次收到服务器
     private long lastZxidSeen;
+    //回话超时时间
     private int timeOut;
     private long sessionId;
     private byte[] passwd;
@@ -88,6 +95,7 @@ public class ConnectRequest implements Record {
 
     /**
      * 序列化
+     *
      * @param a_
      * @param tag
      * @throws java.io.IOException
