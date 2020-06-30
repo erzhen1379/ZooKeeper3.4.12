@@ -18,6 +18,8 @@
 
 package org.apache.zookeeper;
 
+import org.apache.zookeeper.data.Stat;
+
 /**
  * a class that represents the stats associated with quotas
  */
@@ -26,6 +28,7 @@ public class StatsTrack {
     private long bytes;
     private String countStr = "count";
     private String byteStr = "bytes";
+
 
     /**
      * a default constructor for

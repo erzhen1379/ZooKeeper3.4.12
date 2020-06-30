@@ -14,7 +14,7 @@ public class ZKGetChildren implements Watcher {
 
         String path = "/zk-book";
 
-        
+
         zk = new ZooKeeper("172.16.3.200:2181", 5000, new ZKGetChildren());
         connectedSemaphore.await();
         zk.create(path, "".getBytes(),

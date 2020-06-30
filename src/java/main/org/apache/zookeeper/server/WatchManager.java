@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,18 +35,26 @@ import org.apache.zookeeper.Watcher.Event.KeeperState;
  * This class manages watches. It allows watches to be associated with a string
  * and removes watchers and their watches in addition to managing triggers.
  */
+
+/**
+ * zookeeper服务端Watcher的管理者，
+ */
 public class WatchManager {
     private static final Logger LOG = LoggerFactory.getLogger(WatchManager.class);
-
+    /**
+     * 是从数据节点路径的粒度托管Watcher
+     */
     private final HashMap<String, HashSet<Watcher>> watchTable =
-        new HashMap<String, HashSet<Watcher>>();
-
+            new HashMap<String, HashSet<Watcher>>();
+    /**
+     * 是从Watcher粒度来控制事件触发需要触发的数据节点
+     */
     private final HashMap<Watcher, HashSet<String>> watch2Paths =
-        new HashMap<Watcher, HashSet<String>>();
+            new HashMap<Watcher, HashSet<String>>();
 
-    public synchronized int size(){
+    public synchronized int size() {
         int result = 0;
-        for(Set<Watcher> watches : watchTable.values()) {
+        for (Set<Watcher> watches : watchTable.values()) {
             result += watches.size();
         }
         return result;
@@ -92,10 +100,23 @@ public class WatchManager {
         return triggerWatch(path, type, null);
     }
 
+    /**
+     * 触发相关事件
+     *
+     * @param path
+     * @param type
+     * @param supress
+     * @return
+     */
     public Set<Watcher> triggerWatch(String path, EventType type, Set<Watcher> supress) {
+        //将EventType，通知状态KeeperState，以及节点路径封装成一个WatcherEvent对象
         WatchedEvent e = new WatchedEvent(type,
                 KeeperState.SyncConnected, path);
         HashSet<Watcher> watchers;
+        //查询Watcher
+        /**
+         * 从watchTable中取出对应的Watcher对象
+         */
         synchronized (this) {
             watchers = watchTable.remove(path);
             if (watchers == null || watchers.isEmpty()) {
@@ -117,6 +138,7 @@ public class WatchManager {
             if (supress != null && supress.contains(w)) {
                 continue;
             }
+            //调用process方法，触发Watcher
             w.process(e);
         }
         return watchers;
@@ -130,7 +152,7 @@ public class WatchManager {
         StringBuilder sb = new StringBuilder();
 
         sb.append(watch2Paths.size()).append(" connections watching ")
-            .append(watchTable.size()).append(" paths\n");
+                .append(watchTable.size()).append(" paths\n");
 
         int total = 0;
         for (HashSet<String> paths : watch2Paths.values()) {
@@ -143,8 +165,9 @@ public class WatchManager {
 
     /**
      * String representation of watches. Warning, may be large!
+     *
      * @param byPath iff true output watches by paths, otw output
-     * watches by connection
+     *               watches by connection
      * @return string representation of watches
      */
     public synchronized void dumpWatches(PrintWriter pwriter, boolean byPath) {
@@ -153,14 +176,14 @@ public class WatchManager {
                 pwriter.println(e.getKey());
                 for (Watcher w : e.getValue()) {
                     pwriter.print("\t0x");
-                    pwriter.print(Long.toHexString(((ServerCnxn)w).getSessionId()));
+                    pwriter.print(Long.toHexString(((ServerCnxn) w).getSessionId()));
                     pwriter.print("\n");
                 }
             }
         } else {
             for (Entry<Watcher, HashSet<String>> e : watch2Paths.entrySet()) {
                 pwriter.print("0x");
-                pwriter.println(Long.toHexString(((ServerCnxn)e.getKey()).getSessionId()));
+                pwriter.println(Long.toHexString(((ServerCnxn) e.getKey()).getSessionId()));
                 for (String path : e.getValue()) {
                     pwriter.print("\t");
                     pwriter.println(path);
