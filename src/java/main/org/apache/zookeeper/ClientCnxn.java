@@ -87,6 +87,9 @@ import org.slf4j.LoggerFactory;
  * This class manages the socket i/o for the client. ClientCnxn maintains a list
  * of available servers to connect to and "transparently" switches servers it is
  * connected to as needed.
+ * 客户端核心线程，内部分2个线程
+ * 1.SendThread  前者是一个IO线程，主要负责Zookeeper客户端和服务端之间IO通信
+ * 2.EventThread   后者是一个事件线程，主要负责对服务端事件进行处理
  */
 public class ClientCnxn {
     private static final Logger LOG = LoggerFactory.getLogger(ClientCnxn.class);
@@ -533,7 +536,6 @@ public class ClientCnxn {
         }
 
         /**
-         *
          * @param event
          */
         private void processEvent(Object event) {
