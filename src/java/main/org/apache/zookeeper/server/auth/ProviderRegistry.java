@@ -26,6 +26,9 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.zookeeper.server.ZooKeeperServer;
 
+/**
+ * 将所有权限都注册这个类中
+ */
 public class ProviderRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(ProviderRegistry.class);
 
@@ -37,6 +40,7 @@ public class ProviderRegistry {
         synchronized (ProviderRegistry.class) {
             if (initialized)
                 return;
+            //初始化控制器
             IPAuthenticationProvider ipp = new IPAuthenticationProvider();
             DigestAuthenticationProvider digp = new DigestAuthenticationProvider();
             authenticationProviders.put(ipp.getScheme(), ipp);

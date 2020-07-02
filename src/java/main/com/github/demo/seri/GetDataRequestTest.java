@@ -11,10 +11,10 @@ import java.io.IOException;
 public class GetDataRequestTest implements Watcher {
 
     public static void main(String[] args) throws IOException, KeeperException, InterruptedException {
-        String path="/zk-hosts-getDate";
+        String path="/zk-hosts-getDate1";
         ZooKeeper zookeeper = new ZooKeeper("172.16.3.200:2181", 5000, new GetDataRequestTest());
         //创建父节点
-    //    zookeeper.create(path,"test1".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+       zookeeper.create(path,"test1".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
         //实际上是调用GetDataRequest请求
         String s = new String(zookeeper.getData(path, true, null));
         System.out.println(s);

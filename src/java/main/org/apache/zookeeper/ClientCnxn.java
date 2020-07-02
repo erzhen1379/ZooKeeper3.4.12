@@ -141,11 +141,14 @@ public class ClientCnxn {
 
     /**
      * These are the packets that have been sent and are waiting for a response.
+     * 服务端相应等待队列
      */
+
     private final LinkedList<Packet> pendingQueue = new LinkedList<Packet>();
 
     /**
      * These are the packets that need to be sent.
+     * 客户端请求发送队列
      */
     private final LinkedList<Packet> outgoingQueue = new LinkedList<Packet>();
 
@@ -458,7 +461,11 @@ public class ClientCnxn {
         return name + suffix;
     }
 
+    /**
+     * 客户端事件处理
+     */
     class EventThread extends ZooKeeperThread {
+        //用于存放有等待客户端处理事件
         private final LinkedBlockingQueue<Object> waitingEvents =
                 new LinkedBlockingQueue<Object>();
 
@@ -740,6 +747,7 @@ public class ClientCnxn {
     /**
      * This class services the outgoing request queue and generates the heart
      * beats. It also spawns the ReadThread.
+     * 管理客户端和服务端所有网络IO
      */
     class SendThread extends ZooKeeperThread {
         private long lastPingSentNs;
@@ -1472,6 +1480,7 @@ public class ClientCnxn {
                 if (h.getType() == OpCode.closeSession) {
                     closing = true;
                 }
+
                 outgoingQueue.add(packet);
             }
         }

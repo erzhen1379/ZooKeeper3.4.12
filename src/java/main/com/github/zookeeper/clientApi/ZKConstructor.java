@@ -11,6 +11,11 @@ public class ZKConstructor implements Watcher {
     private static CountDownLatch connectedSemaphore = new CountDownLatch(1);
 
     public static void main(String[] args) throws Exception {
+        //
+        /**会话创建过程：1初始化zookeeper对象
+         * 会创建一个客户端Watcher管理器，ClientWatherManager
+         *
+         */
         ZooKeeper zookeeper = new ZooKeeper("172.16.3.200:2181", 5000, new ZKConstructor());
         System.out.println(zookeeper.getState());
         long sessionId = zookeeper.getSessionId();

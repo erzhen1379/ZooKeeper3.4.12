@@ -24,6 +24,7 @@ import org.apache.zookeeper.server.ServerCnxn;
 /**
  * This interface is implemented by authentication providers to add new kinds of
  * authentication schemes to ZooKeeper.
+ * 标准权限控制器
  */
 public interface AuthenticationProvider {
     /**
