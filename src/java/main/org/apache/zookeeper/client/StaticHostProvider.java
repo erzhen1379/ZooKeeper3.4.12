@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Most simple HostProvider, resolves only on instantiation.
- * 
  */
 @InterfaceAudience.Public
 public final class StaticHostProvider implements HostProvider {
@@ -42,18 +41,16 @@ public final class StaticHostProvider implements HostProvider {
 
     private final List<InetSocketAddress> serverAddresses = new ArrayList<InetSocketAddress>(
             5);
-
+    //表示当前正在使用的服务器地址位置
     private int lastIndex = -1;
-
+    //表示循环队列中当前遍历的那个元素位置
     private int currentIndex = -1;
 
     /**
      * Constructs a SimpleHostSet.
-     * 
-     * @param serverAddresses
-     *            possibly unresolved ZooKeeper server addresses
-     * @throws IllegalArgumentException
-     *             if serverAddresses is empty or resolves to an empty list
+     *
+     * @param serverAddresses possibly unresolved ZooKeeper server addresses
+     * @throws IllegalArgumentException if serverAddresses is empty or resolves to an empty list
      */
     public StaticHostProvider(Collection<InetSocketAddress> serverAddresses) {
         for (InetSocketAddress address : serverAddresses) {
@@ -83,11 +80,12 @@ public final class StaticHostProvider implements HostProvider {
                 LOG.error("Unable to connect to server: {}", address, e);
             }
         }
-        
+
         if (this.serverAddresses.isEmpty()) {
             throw new IllegalArgumentException(
                     "A HostProvider may not be empty!");
         }
+        //shuffle操作，随机打散
         Collections.shuffle(this.serverAddresses);
     }
 
@@ -100,6 +98,10 @@ public final class StaticHostProvider implements HostProvider {
         if (currentIndex == serverAddresses.size()) {
             currentIndex = 0;
         }
+        /**
+         * 如果发现当前游标的位置和上次已经使用的地址位置已经一样，进行spinDelay毫秒等待
+         *
+         */
         if (currentIndex == lastIndex && spinDelay > 0) {
             try {
                 Thread.sleep(spinDelay);

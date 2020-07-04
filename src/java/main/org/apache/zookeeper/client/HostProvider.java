@@ -43,6 +43,10 @@ import java.net.InetSocketAddress;
  */
 @InterfaceAudience.Public
 public interface HostProvider {
+    /**
+     * 该方法返回当前服务器地址列表个数
+     * @return
+     */
     public int size();
 
     /**
@@ -52,6 +56,7 @@ public interface HostProvider {
      * 
      * @param spinDelay
      *            Milliseconds to wait if all hosts have been tried once.
+     *            返回一个服务器地址InetSocketAddress，以便客户端进行服务器连接
      */
     public InetSocketAddress next(long spinDelay);
 
@@ -59,6 +64,7 @@ public interface HostProvider {
      * Notify the HostProvider of a successful connection.
      * 
      * The HostProvider may use this notification to reset it's inner state.
+     * 回调方法，如果客户端和服务端创建连接成功，就调用这个方法来通知HostProvider
      */
     public void onConnected();
 }

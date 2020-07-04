@@ -90,6 +90,7 @@ public class StaticHostProviderTest extends ZKTestCase {
     public void testOnConnectDoesNotReset() {
         HostProvider hostProvider = getHostProvider((byte) 2);
         InetSocketAddress first = hostProvider.next(0);
+        //方法回调，通知
         hostProvider.onConnected();
         InetSocketAddress second = hostProvider.next(0);
         assertNotSame(first, second);

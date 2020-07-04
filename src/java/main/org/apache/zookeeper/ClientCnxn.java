@@ -755,6 +755,12 @@ public class ClientCnxn {
         private Random r = new Random(System.nanoTime());
         private boolean isFirstConnect = true;
 
+        /**
+         * 首先判断当前客户端状态，进行一些列的清理工作，为客户端发送会话创建请求做准备
+         *
+         * @param incomingBuffer
+         * @throws IOException
+         */
         void readResponse(ByteBuffer incomingBuffer) throws IOException {
             ByteBufferInputStream bbis = new ByteBufferInputStream(
                     incomingBuffer);

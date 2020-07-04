@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,25 +25,29 @@ import org.apache.zookeeper.common.PathUtils;
 
 /**
  * A parser for ZooKeeper Client connect strings.
- * 
+ *
  * This class is not meant to be seen or used outside of ZooKeeper itself.
- * 
+ *
  * The chrootPath member should be replaced by a Path object in issue
  * ZOOKEEPER-849.
- * 
+ *
  * @see org.apache.zookeeper.ZooKeeper
  */
 public final class ConnectStringParser {
     private static final int DEFAULT_PORT = 2181;
 
     private final String chrootPath;
-
+    /**
+     * 将服务器地址和相应端口封装成一个InetSocketAddress对象
+     * 会进一步封装到staticHostProvider类中
+     */
     private final ArrayList<InetSocketAddress> serverAddresses = new ArrayList<InetSocketAddress>();
 
     /**
-     * 
+     *
      * @throws IllegalArgumentException
      *             for an invalid chroot path.
+     *             解析服务器地址
      */
     public ConnectStringParser(String connectString) {
         // parse out chroot, if any
@@ -77,6 +81,10 @@ public final class ConnectStringParser {
         }
     }
 
+    /**
+     * 解析chrootPath,保存服务器地址
+     * @return
+     */
     public String getChrootPath() {
         return chrootPath;
     }
