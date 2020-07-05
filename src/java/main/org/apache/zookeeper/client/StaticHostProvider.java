@@ -67,6 +67,7 @@ public final class StaticHostProvider implements HostProvider {
                     // the toString() method.
                     if (resolvedAddress.toString().startsWith("/")
                             && resolvedAddress.getAddress() != null) {
+                        //serverAddresses为构建的数组
                         this.serverAddresses.add(
                                 new InetSocketAddress(InetAddress.getByAddress(
                                         address.getHostName(),

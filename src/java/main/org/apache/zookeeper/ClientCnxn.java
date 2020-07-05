@@ -142,6 +142,7 @@ public class ClientCnxn {
     /**
      * These are the packets that have been sent and are waiting for a response.
      * 服务端相应等待队列
+     * 为了存储那些已经从客户端发送到服务端，但是需要等待服务器响应的Packet集合
      */
 
     private final LinkedList<Packet> pendingQueue = new LinkedList<Packet>();
@@ -149,6 +150,7 @@ public class ClientCnxn {
     /**
      * These are the packets that need to be sent.
      * 客户端请求发送队列
+     * 专门存储哪些需要发送得到服务端的Packet集合
      */
     private final LinkedList<Packet> outgoingQueue = new LinkedList<Packet>();
 
@@ -259,18 +261,20 @@ public class ClientCnxn {
      * 最小的通信协议单元
      */
     static class Packet {
+        //请求头
         RequestHeader requestHeader;
-
+        //响应头
         ReplyHeader replyHeader;
-
+        //请求体
         Record request;
-
+        //相应体
         Record response;
 
         ByteBuffer bb;
 
         /**
          * Client's view of the path (may differ due to chroot)
+         * 节点路径
          **/
         String clientPath;
         /**
@@ -311,7 +315,8 @@ public class ClientCnxn {
         }
 
         /**
-         * Packet内部序列化
+         * Packet内部序列化，生成可以用于底层网络传输的ByteBuffer对象
+         * 当前只针对requestHeader,requet和readOnly三个属性进行序列化，其余属性都保存在客户端上下文中，不会进行与服务端进行网络传输
          */
         public void createBB() {
             //WatchRegistration虽然封装到Packet中，但是并没有序列化到底层字节数组中
@@ -462,7 +467,7 @@ public class ClientCnxn {
     }
 
     /**
-     * 客户端事件处理
+     * 客户端事件处理,并且触发客户端注册的Watcher监听
      */
     class EventThread extends ZooKeeperThread {
         //用于存放有等待客户端处理事件
@@ -748,9 +753,18 @@ public class ClientCnxn {
      * This class services the outgoing request queue and generates the heart
      * beats. It also spawns the ReadThread.
      * 管理客户端和服务端所有网络IO
+     * I/O 调度线程
+     * 维护了客户端和服务端之间的会话生命周期，其通过在一定的周期频率内向服务器发送Ping实现心跳检查
+     * 如果客户端与服务端出现TCP连接断开的情况，就会自动且透明化的完成重连操作
+     *
+     *
+     * ------------
+     * 另一方面，SendThread管理客户端和服务端所有请求和响应接收工作
+     * 负责将来自服务端的事件传递给EventThread中处理
      */
     class SendThread extends ZooKeeperThread {
         private long lastPingSentNs;
+        //底层Socket通信层
         private final ClientCnxnSocket clientCnxnSocket;
         private Random r = new Random(System.nanoTime());
         private boolean isFirstConnect = true;
@@ -820,7 +834,7 @@ public class ClientCnxn {
                     LOG.debug("Got " + we + " for sessionid 0x"
                             + Long.toHexString(sessionId));
                 }
-
+                //负责将服务端事件传递给EventThread处理
                 eventThread.queueEvent(we);
                 return;
             }
