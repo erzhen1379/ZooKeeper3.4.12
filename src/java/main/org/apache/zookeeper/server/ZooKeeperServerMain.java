@@ -41,13 +41,15 @@ public class ZooKeeperServerMain {
 
     private static final String USAGE =
         "Usage: ZooKeeperServerMain configfile | port datadir [ticktime] [maxcnxns]";
-
+     //创建ServerCnxnFactory,
+     // netty
     private ServerCnxnFactory cnxnFactory;
 
     /*
      * Start up the ZooKeeper server.
      *
      * @param args the configfile or the port datadir [ticktime]
+     * 单机版启动
      */
     public static void main(String[] args) {
         ZooKeeperServerMain main = new ZooKeeperServerMain();
@@ -102,6 +104,9 @@ public class ZooKeeperServerMain {
             // so rather than spawning another thread, we will just call
             // run() in this thread.
             // create a file logger url from the command line args
+            /**
+             * 核心启动类
+             */
             final ZooKeeperServer zkServer = new ZooKeeperServer();
             // Registers shutdown handler which will be used to know the
             // server error or shutdown state changes.
@@ -148,6 +153,7 @@ public class ZooKeeperServerMain {
     }
 
     // VisibleForTesting
+
     ServerCnxnFactory getCnxnFactory() {
         return cnxnFactory;
     }

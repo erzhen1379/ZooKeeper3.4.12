@@ -40,7 +40,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class ServerCnxnFactory {
-
+    /**
+     * 引用netty 实现nio
+     */
     public static final String ZOOKEEPER_SERVER_CNXN_FACTORY = "zookeeper.serverCnxnFactory";
 
     public interface PacketProcessor {

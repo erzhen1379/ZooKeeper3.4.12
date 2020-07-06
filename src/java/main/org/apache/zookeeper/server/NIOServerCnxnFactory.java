@@ -190,6 +190,9 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
         }
     }
 
+    /**
+     * nio
+     */
     public void run() {
         while (!ss.socket().isClosed()) {
             try {

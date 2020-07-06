@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,18 +39,28 @@ import org.apache.zookeeper.common.Time;
  * interval. It always rounds up the tick interval to provide a sort of grace
  * period. Sessions are thus expired in batches made up of sessions that expire
  * in a given interval.
+ * 服务端会话管理器，负责会话创建，管理，清理工作
  */
 public class SessionTrackerImpl extends ZooKeeperCriticalThread implements SessionTracker {
     private static final Logger LOG = LoggerFactory.getLogger(SessionTrackerImpl.class);
-
+    /**
+     * 根据sessionID管理Session实体
+     */
     HashMap<Long, SessionImpl> sessionsById = new HashMap<Long, SessionImpl>();
-
+    /**
+     * 用于根据下次会话超时时间点来归档会话，便于进行会话管理和超时检查
+     */
     HashMap<Long, SessionSet> sessionSets = new HashMap<Long, SessionSet>();
-
+    /**
+     * 用于根据sessionID来管理会话超时时间
+     */
     ConcurrentHashMap<Long, Integer> sessionsWithTimeout;
     long nextSessionId = 0;
+    //下次有可能超时时间点
     long nextExpirationTime;
-
+    /**
+     * 时间间隔
+     */
     int expirationInterval;
 
     public static class SessionImpl implements Session {
@@ -68,17 +78,40 @@ public class SessionTrackerImpl extends ZooKeeperCriticalThread implements Sessi
 
         Object owner;
 
-        public long getSessionId() { return sessionId; }
-        public int getTimeout() { return timeout; }
-        public boolean isClosing() { return isClosing; }
+        public long getSessionId() {
+            return sessionId;
+        }
+
+        public int getTimeout() {
+            return timeout;
+        }
+
+        public boolean isClosing() {
+            return isClosing;
+        }
     }
 
+    /**
+     * 初始化sesionID
+     *
+     * @param id
+     * @return
+     */
     public static long initializeNextSession(long id) {
         long nextSid = 0;
+        //
+        /**
+         * 1获取当前时间的毫秒表示，例如：22701953253376
+         * 2左移24位
+         * 3右移动8位
+         */
         nextSid = (Time.currentElapsedTime() << 24) >>> 8;
-        nextSid =  nextSid | (id <<56);
+        //添加机器标识;sid（配置在myid中文件的值，通常是一个整数）
+
+        nextSid = nextSid | (id << 56);
         return nextSid;
     }
+
 
     static class SessionSet {
         HashSet<SessionImpl> sessions = new HashSet<SessionImpl>();
@@ -88,13 +121,13 @@ public class SessionTrackerImpl extends ZooKeeperCriticalThread implements Sessi
 
     private long roundToInterval(long time) {
         // We give a one interval grace period
+        //计算下次可能超时时间
         return (time / expirationInterval + 1) * expirationInterval;
     }
 
     public SessionTrackerImpl(SessionExpirer expirer,
-            ConcurrentHashMap<Long, Integer> sessionsWithTimeout, int tickTime,
-            long sid, ZooKeeperServerListener listener)
-    {
+                              ConcurrentHashMap<Long, Integer> sessionsWithTimeout, int tickTime,
+                              long sid, ZooKeeperServerListener listener) {
         super("SessionTracker", listener);
         this.expirer = expirer;
         this.expirationInterval = tickTime;
@@ -166,9 +199,9 @@ public class SessionTrackerImpl extends ZooKeeperCriticalThread implements Sessi
     synchronized public boolean touchSession(long sessionId, int timeout) {
         if (LOG.isTraceEnabled()) {
             ZooTrace.logTraceMessage(LOG,
-                                     ZooTrace.CLIENT_PING_TRACE_MASK,
-                                     "SessionTrackerImpl --- Touch session: 0x"
-                    + Long.toHexString(sessionId) + " with timeout " + timeout);
+                    ZooTrace.CLIENT_PING_TRACE_MASK,
+                    "SessionTrackerImpl --- Touch session: 0x"
+                            + Long.toHexString(sessionId) + " with timeout " + timeout);
         }
         SessionImpl s = sessionsById.get(sessionId);
         // Return false, if the session doesn't exists or marked as closing
@@ -211,12 +244,12 @@ public class SessionTrackerImpl extends ZooKeeperCriticalThread implements Sessi
         if (LOG.isTraceEnabled()) {
             ZooTrace.logTraceMessage(LOG, ZooTrace.SESSION_TRACE_MASK,
                     "SessionTrackerImpl --- Removing session 0x"
-                    + Long.toHexString(sessionId));
+                            + Long.toHexString(sessionId));
         }
         if (s != null) {
             SessionSet set = sessionSets.get(s.tickTime);
             // Session expiration has been removing the sessions   
-            if(set != null){
+            if (set != null) {
                 set.sessions.remove(s);
             }
         }
@@ -228,7 +261,7 @@ public class SessionTrackerImpl extends ZooKeeperCriticalThread implements Sessi
         running = false;
         if (LOG.isTraceEnabled()) {
             ZooTrace.logTraceMessage(LOG, ZooTrace.getTextTraceLevel(),
-                                     "Shutdown SessionTrackerImpl!");
+                    "Shutdown SessionTrackerImpl!");
         }
     }
 
@@ -246,13 +279,13 @@ public class SessionTrackerImpl extends ZooKeeperCriticalThread implements Sessi
             if (LOG.isTraceEnabled()) {
                 ZooTrace.logTraceMessage(LOG, ZooTrace.SESSION_TRACE_MASK,
                         "SessionTrackerImpl --- Adding session 0x"
-                        + Long.toHexString(id) + " " + sessionTimeout);
+                                + Long.toHexString(id) + " " + sessionTimeout);
             }
         } else {
             if (LOG.isTraceEnabled()) {
                 ZooTrace.logTraceMessage(LOG, ZooTrace.SESSION_TRACE_MASK,
                         "SessionTrackerImpl --- Existing session 0x"
-                        + Long.toHexString(id) + " " + sessionTimeout);
+                                + Long.toHexString(id) + " " + sessionTimeout);
             }
         }
         touchSession(id, sessionTimeout);
