@@ -68,7 +68,7 @@ import org.slf4j.LoggerFactory;
  * message to the tail of the queue, thus changing the order of messages.
  * Although this is not a problem for the leader election, it could be a problem
  * when consolidating peer communication. This is to be verified, though.
- * 
+ * 用于保存接收到的，待发送的消息，以及消息发送器
  */
 
 public class QuorumCnxManager {
@@ -122,9 +122,12 @@ public class QuorumCnxManager {
 
     /*
      * Mapping from Peer to Thread number
+     * 发送器的集合
      */
     final ConcurrentHashMap<Long, SendWorker> senderWorkerMap;
+    //消费发送队列
     final ConcurrentHashMap<Long, ArrayBlockingQueue<ByteBuffer>> queueSendMap;
+    //最近发送过的消息，在这个集合中为每个sid保留最近发送过的一个消息
     final ConcurrentHashMap<Long, ByteBuffer> lastMessageSent;
 
     /*

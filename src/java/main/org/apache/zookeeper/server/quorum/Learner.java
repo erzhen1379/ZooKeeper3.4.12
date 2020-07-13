@@ -52,7 +52,8 @@ import org.slf4j.LoggerFactory;
 /**
  * This class is the superclass of two of the three main actors in a ZK
  * ensemble: Followers and Observers. Both Followers and Observers share 
- * a good deal of code which is moved into Peer to avoid duplication. 
+ * a good deal of code which is moved into Peer to avoid duplication.
+ * leader服务器需要和所有其余的服务器保持连接，确保集群存活情况。
  */
 public class Learner {       
     static class PacketInFlight {

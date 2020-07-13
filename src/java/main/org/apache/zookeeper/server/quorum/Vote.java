@@ -87,13 +87,13 @@ public class Vote {
     }
     
     final private int version;
-    
+    //被推举的Leader的sid值
     final private long id;
-    
+    //被推举的Leader的事物id
     final private long zxid;
-    
+    //逻辑时钟，用来判断多个投票是否同一轮选举周期中。该值在服务端是一个自增序列。每次进入新一轮投票后，都会进行加1操作
     final private long electionEpoch;
-    
+    //被推举Leader的epoch
     final private long peerEpoch;
     
     public int getVersion() {
