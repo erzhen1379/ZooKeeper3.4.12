@@ -123,6 +123,7 @@ public class ReferenceCountedACLCache {
     }
 
     public synchronized void serialize(OutputArchive oa) throws IOException {
+        //序列化map
         oa.writeInt(longKeyMap.size(), "map");
         Set<Map.Entry<Long, List<ACL>>> set = longKeyMap.entrySet();
         for (Map.Entry<Long, List<ACL>> val : set) {
@@ -130,6 +131,7 @@ public class ReferenceCountedACLCache {
             List<ACL> aclList = val.getValue();
             oa.startVector(aclList, "acls");
             for (ACL acl : aclList) {
+                //acl序列化操作
                 acl.serialize(oa, "acl");
             }
             oa.endVector(aclList, "acls");

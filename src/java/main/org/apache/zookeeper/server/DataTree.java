@@ -83,13 +83,19 @@ public class DataTree {
 
     private final WatchManager childWatches = new WatchManager();
 
-    /** the root of zookeeper tree */
+    /**
+     * the root of zookeeper tree
+     */
     private static final String rootZookeeper = "/";
 
-    /** the zookeeper nodes that acts as the management and status node **/
+    /**
+     * the zookeeper nodes that acts as the management and status node
+     **/
     private static final String procZookeeper = Quotas.procZookeeper;
 
-    /** this will be the string thats stored as a child of root */
+    /**
+     * this will be the string thats stored as a child of root
+     */
     private static final String procChildZookeeper = procZookeeper.substring(1);
 
     /**
@@ -98,7 +104,9 @@ public class DataTree {
      */
     private static final String quotaZookeeper = Quotas.quotaZookeeper;
 
-    /** this will be the string thats stored as a child of /zookeeper */
+    /**
+     * this will be the string thats stored as a child of /zookeeper
+     */
     private static final String quotaChildZookeeper = quotaZookeeper
             .substring(procZookeeper.length() + 1);
 
@@ -113,7 +121,9 @@ public class DataTree {
      */
     private final Map<Long, HashSet<String>> ephemerals =
             new ConcurrentHashMap<Long, HashSet<String>>();
-
+    /**
+     * 权限缓存
+     */
     private final ReferenceCountedACLCache aclCache = new ReferenceCountedACLCache();
 
     @SuppressWarnings("unchecked")
@@ -142,10 +152,8 @@ public class DataTree {
      * just an accessor method to allow raw creation of datatree's from a bunch
      * of datanodes
      *
-     * @param path
-     *            the path of the datanode
-     * @param node
-     *            the datanode corresponding to this path
+     * @param path the path of the datanode
+     * @param node the datanode corresponding to this path
      */
     public void addDataNode(String path, DataNode node) {
         nodes.put(path, node);
@@ -226,8 +234,7 @@ public class DataTree {
     /**
      * is the path one of the special paths owned by zookeeper.
      *
-     * @param path
-     *            the path to be checked
+     * @param path the path to be checked
      * @return true if a special path. false if not.
      */
     boolean isSpecialPath(String path) {
@@ -267,10 +274,8 @@ public class DataTree {
     /**
      * update the count of this stat datanode
      *
-     * @param lastPrefix
-     *            the path of the node that is quotaed.
-     * @param diff
-     *            the diff to be added to the count
+     * @param lastPrefix the path of the node that is quotaed.
+     * @param diff       the diff to be added to the count
      */
     public void updateCount(String lastPrefix, int diff) {
         String statNode = Quotas.statPath(lastPrefix);
@@ -309,12 +314,9 @@ public class DataTree {
     /**
      * update the count of bytes of this stat datanode
      *
-     * @param lastPrefix
-     *            the path of the node that is quotaed
-     * @param diff
-     *            the diff to added to number of bytes
-     * @throws IOException
-     *             if path is not found
+     * @param lastPrefix the path of the node that is quotaed
+     * @param diff       the diff to added to number of bytes
+     * @throws IOException if path is not found
      */
     public void updateBytes(String lastPrefix, long diff) {
         String statNode = Quotas.statPath(lastPrefix);
@@ -356,21 +358,25 @@ public class DataTree {
      * @param path
      * @param data
      * @param acl
-     * @param ephemeralOwner
-     *            the session id that owns this node. -1 indicates this is not
-     *            an ephemeral node.
+     * @param ephemeralOwner the session id that owns this node. -1 indicates this is not
+     *                       an ephemeral node.
      * @param zxid
      * @param time
      * @return the patch of the created node
-     * @throws KeeperException
+     * @throws KeeperException 创建节点
      */
     public String createNode(String path, byte data[], List<ACL> acl,
                              long ephemeralOwner, int parentCVersion, long zxid, long time)
             throws KeeperException.NoNodeException,
             KeeperException.NodeExistsException {
+        //切割路径
+
         int lastSlash = path.lastIndexOf('/');
+        //父路径
         String parentName = path.substring(0, lastSlash);
+        //子路径
         String childName = path.substring(lastSlash + 1);
+        //设置状态信息
         StatPersisted stat = new StatPersisted();
         stat.setCtime(time);
         stat.setMtime(time);
@@ -381,11 +387,13 @@ public class DataTree {
         stat.setAversion(0);
         stat.setEphemeralOwner(ephemeralOwner);
         DataNode parent = nodes.get(parentName);
+        //如果父节点为空，抛出异常
         if (parent == null) {
             throw new KeeperException.NoNodeException();
         }
         synchronized (parent) {
             Set<String> children = parent.getChildren();
+            //判断是否包含字节点
             if (children.contains(childName)) {
                 throw new KeeperException.NodeExistsException();
             }
@@ -396,10 +404,13 @@ public class DataTree {
             }
             parent.stat.setCversion(parentCVersion);
             parent.stat.setPzxid(zxid);
+            //acl类型转换long
             Long longval = aclCache.convertAcls(acl);
+            //放入dataNode中
             DataNode child = new DataNode(parent, data, longval, stat);
             parent.addChild(childName);
             nodes.put(path, child);
+            //判断sessionid是否为0，判断是否为临时节点
             if (ephemeralOwner != 0) {
                 HashSet<String> list = ephemerals.get(ephemeralOwner);
                 if (list == null) {
@@ -431,6 +442,7 @@ public class DataTree {
             updateCount(lastPrefix, 1);
             updateBytes(lastPrefix, data == null ? 0 : data.length);
         }
+        //触发
         dataWatches.triggerWatch(path, Event.EventType.NodeCreated);
         childWatches.triggerWatch(parentName.equals("") ? "/" : parentName,
                 Event.EventType.NodeChildrenChanged);
@@ -440,10 +452,8 @@ public class DataTree {
     /**
      * remove the path from the datatree
      *
-     * @param path
-     *            the path to of the node to be deleted
-     * @param zxid
-     *            the current zxid
+     * @param path the path to of the node to be deleted
+     * @param zxid the current zxid
      * @throws KeeperException.NoNodeException
      */
     public void deleteNode(String path, long zxid)
@@ -539,6 +549,7 @@ public class DataTree {
     /**
      * If there is a quota set, return the appropriate prefix for that quota
      * Else return null
+     *
      * @param path The ZK path to check for quota
      * @return Max quota prefix, or null if none
      */
@@ -650,6 +661,9 @@ public class DataTree {
         return aclCache.size();
     }
 
+    /**
+     * 节点信息
+     */
     static public class ProcessTxnResult {
         public long clientId;
 
@@ -697,6 +711,13 @@ public class DataTree {
 
     public volatile long lastProcessedZxid = 0;
 
+    /**
+     * 调用该方法进行节点操作
+     *
+     * @param header
+     * @param txn
+     * @return
+     */
     public ProcessTxnResult processTxn(TxnHeader header, Record txn) {
         ProcessTxnResult rc = new ProcessTxnResult();
 
@@ -707,7 +728,9 @@ public class DataTree {
             rc.type = header.getType();
             rc.err = 0;
             rc.multiResult = null;
+            //
             switch (header.getType()) {
+                //创建节点
                 case OpCode.create:
                     CreateTxn createTxn = (CreateTxn) txn;
                     rc.path = createTxn.getPath();
@@ -719,11 +742,13 @@ public class DataTree {
                             createTxn.getParentCVersion(),
                             header.getZxid(), header.getTime());
                     break;
+                //删除节点
                 case OpCode.delete:
                     DeleteTxn deleteTxn = (DeleteTxn) txn;
                     rc.path = deleteTxn.getPath();
                     deleteNode(deleteTxn.getPath(), header.getZxid());
                     break;
+                //修改节点
                 case OpCode.setData:
                     SetDataTxn setDataTxn = (SetDataTxn) txn;
                     rc.path = setDataTxn.getPath();
@@ -731,12 +756,14 @@ public class DataTree {
                             .getData(), setDataTxn.getVersion(), header
                             .getZxid(), header.getTime());
                     break;
+                //设置acl
                 case OpCode.setACL:
                     SetACLTxn setACLTxn = (SetACLTxn) txn;
                     rc.path = setACLTxn.getPath();
                     rc.stat = setACL(setACLTxn.getPath(), setACLTxn.getAcl(),
                             setACLTxn.getVersion());
                     break;
+                //关闭session
                 case OpCode.closeSession:
                     killSession(header.getClientId(), header.getZxid());
                     break;
@@ -748,6 +775,7 @@ public class DataTree {
                     CheckVersionTxn checkTxn = (CheckVersionTxn) txn;
                     rc.path = checkTxn.getPath();
                     break;
+                //批量操作
                 case OpCode.multi:
                     MultiTxn multiTxn = (MultiTxn) txn;
                     List<Txn> txns = multiTxn.getTxns();
@@ -913,10 +941,8 @@ public class DataTree {
     /**
      * this method gets the count of nodes and the bytes under a subtree
      *
-     * @param path
-     *            the path to be used
-     * @param counts
-     *            the int count
+     * @param path   the path to be used
+     * @param counts the int count
      */
     private void getCounts(String path, Counts counts) {
         DataNode node = getNode(path);
@@ -941,8 +967,7 @@ public class DataTree {
     /**
      * update the quota for the given path
      *
-     * @param path
-     *            the path to be used
+     * @param path the path to be used
      */
     private void updateQuotaForPath(String path) {
         Counts c = new Counts();
@@ -1007,14 +1032,12 @@ public class DataTree {
         traverseNode(quotaPath);
     }
 
-    /**
+    /**序列化操作
      * this method uses a stringbuilder to create a new path for children. This
      * is faster than string appends ( str1 + str2).
      *
-     * @param oa
-     *            OutputArchive to write to.
-     * @param path
-     *            a string builder.
+     * @param oa   OutputArchive to write to.
+     * @param path a string builder.
      * @throws IOException
      * @throws InterruptedException
      */
@@ -1054,6 +1077,12 @@ public class DataTree {
 
     public boolean initialized = false;
 
+    /**
+     * 序列化操作
+     * @param oa
+     * @param tag
+     * @throws IOException
+     */
     public void serialize(OutputArchive oa, String tag) throws IOException {
         scount = 0;
         aclCache.serialize(oa);
@@ -1112,6 +1141,7 @@ public class DataTree {
 
     /**
      * Summary of the watches on the datatree.
+     *
      * @param pwriter the output to write to
      */
     public synchronized void dumpWatchesSummary(PrintWriter pwriter) {
@@ -1121,6 +1151,7 @@ public class DataTree {
     /**
      * Write a text dump of all the watches on the datatree.
      * Warning, this is expensive, use sparingly!
+     *
      * @param pwriter the output to write to
      */
     public synchronized void dumpWatches(PrintWriter pwriter, boolean byPath) {
@@ -1129,6 +1160,7 @@ public class DataTree {
 
     /**
      * Write a text dump of all the ephemerals in the datatree.
+     *
      * @param pwriter the output to write to
      */
     public void dumpEphemerals(PrintWriter pwriter) {
@@ -1204,15 +1236,11 @@ public class DataTree {
      * is greater than the current Cversion. A NoNodeException is thrown if
      * a znode for the specified path is not found.
      *
-     * @param path
-     *     Full path to the znode whose Cversion needs to be modified.
-     *     A "/" at the end of the path is ignored.
-     * @param newCversion
-     *     Value to be assigned to Cversion
-     * @param zxid
-     *     Value to be assigned to Pzxid
-     * @throws KeeperException.NoNodeException
-     *     If znode not found.
+     * @param path        Full path to the znode whose Cversion needs to be modified.
+     *                    A "/" at the end of the path is ignored.
+     * @param newCversion Value to be assigned to Cversion
+     * @param zxid        Value to be assigned to Pzxid
+     * @throws KeeperException.NoNodeException If znode not found.
      **/
     public void setCversionPzxid(String path, int newCversion, long zxid)
             throws KeeperException.NoNodeException {

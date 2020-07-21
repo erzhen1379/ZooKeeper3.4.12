@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ import org.apache.zookeeper.data.StatPersisted;
  * <p>
  * A data node contains a reference to its parent, a byte array as its data, an
  * array of ACLs, a stat object, and a set of its children's paths.
- * 
+ *
  */
 public class DataNode implements Record {
     /** the parent of this datanode */
@@ -71,7 +71,7 @@ public class DataNode implements Record {
 
     /**
      * create a DataNode with parent, data, acls and stat
-     * 
+     *
      * @param parent
      *            the parent of this DataNode
      * @param data
@@ -90,7 +90,7 @@ public class DataNode implements Record {
 
     /**
      * Method that inserts a child into the children set
-     * 
+     *
      * @param child
      *            to be inserted
      * @return true if this set did not already contain the specified element
@@ -105,7 +105,7 @@ public class DataNode implements Record {
 
     /**
      * Method that removes a child from the children set
-     * 
+     *
      * @param child
      * @return true if this set contained the specified element
      */
@@ -118,7 +118,7 @@ public class DataNode implements Record {
 
     /**
      * convenience method for setting the children for this datanode
-     * 
+     *
      * @param children
      */
     public synchronized void setChildren(HashSet<String> children) {
@@ -127,7 +127,7 @@ public class DataNode implements Record {
 
     /**
      * convenience methods to get the children
-     * 
+     *
      * @return the children of this datanode
      */
     public synchronized Set<String> getChildren() {
@@ -155,7 +155,7 @@ public class DataNode implements Record {
         // when we do the Cversion we need to translate from the count of the creates
         // to the count of the changes (v3 semantics)
         // for every create there is a delete except for the children still present
-        to.setCversion(stat.getCversion()*2 - numChildren);
+        to.setCversion(stat.getCversion() * 2 - numChildren);
         to.setNumChildren(numChildren);
     }
 
@@ -169,8 +169,15 @@ public class DataNode implements Record {
         archive.endRecord("node");
     }
 
+    /**
+     * 序列化操作
+     * @param archive
+     * @param tag
+     * @throws IOException
+     */
     synchronized public void serialize(OutputArchive archive, String tag)
             throws IOException {
+        //没有序列化路径信息
         archive.startRecord(this, "node");
         archive.writeBuffer(data, "data");
         archive.writeLong(acl, "acl");

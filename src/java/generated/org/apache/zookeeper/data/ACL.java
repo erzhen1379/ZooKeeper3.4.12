@@ -45,6 +45,13 @@ public class ACL implements Record {
   public void setId(org.apache.zookeeper.data.Id m_) {
     id=m_;
   }
+
+  /**
+   * 序列化acl
+   * @param a_
+   * @param tag
+   * @throws java.io.IOException
+   */
   public void serialize(OutputArchive a_, String tag) throws java.io.IOException {
     a_.startRecord(this,tag);
     a_.writeInt(perms,"perms");
