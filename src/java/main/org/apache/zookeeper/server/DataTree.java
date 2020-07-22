@@ -1167,6 +1167,7 @@ public class DataTree {
      * @param pwriter the output to write to
      */
     public void dumpEphemerals(PrintWriter pwriter) {
+        LOG.info("执行 {} 操作 ","--写入--");
         Set<Map.Entry<Long, HashSet<String>>> entrySet = ephemerals.entrySet();
         pwriter.println("Sessions with Ephemerals ("
                 + entrySet.size() + "):");
