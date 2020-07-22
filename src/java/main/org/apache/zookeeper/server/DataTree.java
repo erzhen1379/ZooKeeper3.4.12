@@ -678,7 +678,7 @@ public class DataTree {
         public String path;
         //描述信息
         public Stat stat;
-
+        //批量操作
         public List<ProcessTxnResult> multiResult;
 
         /**
@@ -931,6 +931,7 @@ public class DataTree {
     }
 
     /**
+     * 封装的类
      * a encapsultaing class for return value
      */
     private static class Counts {
@@ -1032,7 +1033,8 @@ public class DataTree {
         traverseNode(quotaPath);
     }
 
-    /**序列化操作
+    /**
+     * 序列化操作
      * this method uses a stringbuilder to create a new path for children. This
      * is faster than string appends ( str1 + str2).
      *
@@ -1079,6 +1081,7 @@ public class DataTree {
 
     /**
      * 序列化操作
+     *
      * @param oa
      * @param tag
      * @throws IOException

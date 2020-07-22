@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,6 +32,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.apache.zookeeper.server.DataNode;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -44,6 +45,7 @@ import org.apache.jute.BinaryInputArchive;
 import org.apache.jute.BinaryOutputArchive;
 import org.apache.jute.Record;
 import org.apache.zookeeper.common.PathTrie;
+
 import java.lang.reflect.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -56,12 +58,12 @@ public class DataTreeTest extends ZKTestCase {
 
     @Before
     public void setUp() throws Exception {
-        dt=new DataTree();
+        dt = new DataTree();
     }
 
     @After
     public void tearDown() throws Exception {
-        dt=null;
+        dt = null;
     }
 
     /**
@@ -70,30 +72,40 @@ public class DataTreeTest extends ZKTestCase {
      */
     @Test(timeout = 60000)
     public void testDumpEphemerals() throws Exception {
-        int count = 1000;
+        int count = 100;
         long session = 1000;
         long zxid = 2000;
         final DataTree dataTree = new DataTree();
         LOG.info("Create {} zkclient sessions and its ephemeral nodes", count);
+        //创建临时节点
         createEphemeralNode(session, dataTree, count);
+        //final修饰的对象只能指向唯一一个对象，不可以再将它指向其他对象
+        //并发原子类
+        //类提供了可以原子读取和写入的底层布尔值的操作，并且还包含高级原子操作。 AtomicBoolean支持基础布尔变量上的原子操   　　作
         final AtomicBoolean exceptionDuringDumpEphemerals = new AtomicBoolean(
                 false);
+        System.out.println("exceptionDuringDumpEphemerals:" + exceptionDuringDumpEphemerals);
         final AtomicBoolean running = new AtomicBoolean(true);
+        System.out.println("exceptionDuringDumpEphemerals:" + running);
         Thread thread = new Thread() {
             public void run() {
                 PrintWriter pwriter = new PrintWriter(new StringWriter());
                 try {
                     while (running.get()) {
+                        //Write a text dump of all the ephemerals in the datatree
                         dataTree.dumpEphemerals(pwriter);
                     }
                 } catch (Exception e) {
                     LOG.error("Received exception while dumpEphemerals!", e);
                     exceptionDuringDumpEphemerals.set(true);
                 }
-            };
+            }
+
+            ;
         };
         thread.start();
         LOG.debug("Killing {} zkclient sessions and its ephemeral nodes", count);
+        //关闭session
         killZkClientSession(session, zxid, dataTree, count);
         running.set(false);
         thread.join();
@@ -102,35 +114,45 @@ public class DataTreeTest extends ZKTestCase {
     }
 
     private void killZkClientSession(long session, long zxid,
-            final DataTree dataTree, int count) {
+                                     final DataTree dataTree, int count) {
         for (int i = 0; i < count; i++) {
             dataTree.killSession(session + i, zxid);
         }
     }
 
+    /**
+     * 创建临时节点
+     *
+     * @param session
+     * @param dataTree
+     * @param count
+     * @throws NoNodeException
+     * @throws NodeExistsException
+     */
     private void createEphemeralNode(long session, final DataTree dataTree,
-            int count) throws NoNodeException, NodeExistsException {
+                                     int count) throws NoNodeException, NodeExistsException {
         for (int i = 0; i < count; i++) {
             dataTree.createNode("/test" + i, new byte[0], null, session + i,
                     dataTree.getNode("/").stat.getCversion() + 1, 1, 1);
         }
     }
-    
+
     @Test(timeout = 60000)
     public void testRootWatchTriggered() throws Exception {
-        class MyWatcher implements Watcher{
-            boolean fired=false;
+        class MyWatcher implements Watcher {
+            boolean fired = false;
+
             public void process(WatchedEvent event) {
-                if(event.getPath().equals("/"))
-                    fired=true;
+                if (event.getPath().equals("/"))
+                    fired = true;
             }
         }
-        MyWatcher watcher=new MyWatcher();
+        MyWatcher watcher = new MyWatcher();
         // set a watch on the root node
         dt.getChildren("/", new Stat(), watcher);
         // add a new node, should trigger a watch
-        dt.createNode("/xyz", new byte[0], null, 0, dt.getNode("/").stat.getCversion()+1, 1, 1);
-        Assert.assertFalse("Root node watch not triggered",!watcher.fired);
+        dt.createNode("/xyz", new byte[0], null, 0, dt.getNode("/").stat.getCversion() + 1, 1, 1);
+        Assert.assertFalse("Root node watch not triggered", !watcher.fired);
     }
 
     /**
@@ -138,30 +160,30 @@ public class DataTreeTest extends ZKTestCase {
      */
     @Test(timeout = 60000)
     public void testIncrementCversion() throws Exception {
-        dt.createNode("/test", new byte[0], null, 0, dt.getNode("/").stat.getCversion()+1, 1, 1);
+        dt.createNode("/test", new byte[0], null, 0, dt.getNode("/").stat.getCversion() + 1, 1, 1);
         DataNode zk = dt.getNode("/test");
         int prevCversion = zk.stat.getCversion();
         long prevPzxid = zk.stat.getPzxid();
-        dt.setCversionPzxid("/test/",  prevCversion + 1, prevPzxid + 1);
+        dt.setCversionPzxid("/test/", prevCversion + 1, prevPzxid + 1);
         int newCversion = zk.stat.getCversion();
         long newPzxid = zk.stat.getPzxid();
         Assert.assertTrue("<cversion, pzxid> verification failed. Expected: <" +
-                (prevCversion + 1) + ", " + (prevPzxid + 1) + ">, found: <" +
-                newCversion + ", " + newPzxid + ">",
+                        (prevCversion + 1) + ", " + (prevPzxid + 1) + ">, found: <" +
+                        newCversion + ", " + newPzxid + ">",
                 (newCversion == prevCversion + 1 && newPzxid == prevPzxid + 1));
     }
-   
+
     @Test(timeout = 60000)
     public void testPathTrieClearOnDeserialize() throws Exception {
 
         //Create a DataTree with quota nodes so PathTrie get updated
         DataTree dserTree = new DataTree();
-        
+
         dserTree.createNode("/bug", new byte[20], null, -1, 1, 1, 1);
-        dserTree.createNode(Quotas.quotaZookeeper+"/bug", null, null, -1, 1, 1, 1);
+        dserTree.createNode(Quotas.quotaZookeeper + "/bug", null, null, -1, 1, 1, 1);
         dserTree.createNode(Quotas.quotaPath("/bug"), new byte[20], null, -1, 1, 1, 1);
         dserTree.createNode(Quotas.statPath("/bug"), new byte[20], null, -1, 1, 1, 1);
-        
+
         //deserialize a DataTree; this should clear the old /bug nodes and pathTrie
         DataTree tree = new DataTree();
 
@@ -176,10 +198,10 @@ public class DataTreeTest extends ZKTestCase {
 
         Field pfield = DataTree.class.getDeclaredField("pTrie");
         pfield.setAccessible(true);
-        PathTrie pTrie = (PathTrie)pfield.get(dserTree);
+        PathTrie pTrie = (PathTrie) pfield.get(dserTree);
 
         //Check that the node path is removed from pTrie
-        Assert.assertEquals("/bug is still in pTrie", "", pTrie.findMaxPrefix("/bug"));       
+        Assert.assertEquals("/bug is still in pTrie", "", pTrie.findMaxPrefix("/bug"));
     }
 
     /*
@@ -193,7 +215,7 @@ public class DataTreeTest extends ZKTestCase {
     @Test(timeout = 60000)
     public void testSerializeDoesntLockDataNodeWhileWriting() throws Exception {
         DataTree tree = new DataTree();
-        tree.createNode("/marker", new byte[] {42}, null, -1, 1, 1, 1);
+        tree.createNode("/marker", new byte[]{42}, null, -1, 1, 1, 1);
         final DataNode markerNode = tree.getNode("/marker");
         final AtomicBoolean ranTestCase = new AtomicBoolean();
         DataOutputStream out = new DataOutputStream(new ByteArrayOutputStream());
