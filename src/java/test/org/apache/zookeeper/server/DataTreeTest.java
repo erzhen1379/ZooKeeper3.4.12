@@ -160,7 +160,7 @@ public class DataTreeTest extends ZKTestCase {
      */
     @Test(timeout = 60000)
     public void testIncrementCversion() throws Exception {
-        dt.createNode("/test", new byte[0], null, 0, dt.getNode("/").stat.getCversion() + 1, 1, 1);
+        dt.createNode("/test", new byte[2], null, 0, dt.getNode("/").stat.getCversion() + 1, 1, 1);
         DataNode zk = dt.getNode("/test");
         int prevCversion = zk.stat.getCversion();
         long prevPzxid = zk.stat.getPzxid();

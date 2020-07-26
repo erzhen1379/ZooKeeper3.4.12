@@ -903,7 +903,7 @@ public class DataTree {
         return rc;
     }
 
-    void killSession(long session, long zxid) {
+  public   void killSession(long session, long zxid) {
         // the list is already removed from the ephemerals
         // so we do not have to worry about synchronizing on
         // the list. This is only called from FinalRequestProcessor
