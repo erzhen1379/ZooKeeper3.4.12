@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,6 +38,9 @@ import org.apache.zookeeper.server.persistence.FileTxnLog;
 import org.apache.zookeeper.server.util.SerializeUtils;
 import org.apache.zookeeper.txn.TxnHeader;
 
+/**
+ * 事物日志文件
+ */
 @InterfaceAudience.Public
 public class LogFormatter {
     private static final Logger LOG = LoggerFactory.getLogger(LogFormatter.class);
@@ -50,15 +53,20 @@ public class LogFormatter {
             System.err.println("USAGE: LogFormatter log_file");
             System.exit(2);
         }
+        // FileInputStream流被称为文件字节输入流
+        //解析文件地址
         FileInputStream fis = new FileInputStream(args[0]);
+
         BinaryInputArchive logStream = BinaryInputArchive.getArchive(fis);
         FileHeader fhdr = new FileHeader();
+        //反序列化log文件
         fhdr.deserialize(logStream, "fileheader");
 
         if (fhdr.getMagic() != FileTxnLog.TXNLOG_MAGIC) {
             System.err.println("Invalid magic number for " + args[0]);
             System.exit(2);
         }
+
         System.out.println("ZooKeeper Transactional Log File with dbid "
                 + fhdr.getDbid() + " txnlog format version "
                 + fhdr.getVersion());
@@ -68,6 +76,7 @@ public class LogFormatter {
             long crcValue;
             byte[] bytes;
             try {
+                //获取反序列化值
                 crcValue = logStream.readLong("crcvalue");
 
                 bytes = logStream.readBuffer("txnEntry");
@@ -89,6 +98,7 @@ public class LogFormatter {
             }
             TxnHeader hdr = new TxnHeader();
             Record txn = SerializeUtils.deserializeTxn(bytes, hdr);
+            //20-7-2 下午10时33分37秒 session 0x100000522830000 cxid 0x0 zxid 0x42 closeSession null
             System.out.println(DateFormat.getDateTimeInstance(DateFormat.SHORT,
                     DateFormat.LONG).format(new Date(hdr.getTime()))
                     + " session 0x"

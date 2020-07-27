@@ -86,7 +86,7 @@ import org.slf4j.LoggerFactory;
  *
  * ZeroPad:
  *     0 padded to EOF (filled during preallocation stage)
- * </pre></blockquote> 
+ * </pre></blockquote>
  */
 
 /**
@@ -106,7 +106,9 @@ public class FileTxnLog implements TxnLog {
 
     public static final String LOG_FILE_PREFIX = "log";
 
-    /** Maximum time we allow for elapsed fsync before WARNing */
+    /**
+     * Maximum time we allow for elapsed fsync before WARNing
+     */
     private final static long fsyncWarningThresholdMS;
 
     static {
@@ -144,6 +146,7 @@ public class FileTxnLog implements TxnLog {
     /**
      * constructor for FileTxnLog. Take the directory
      * where the txnlogs are stored
+     *
      * @param logDir the directory where the txnlogs are stored
      */
     public FileTxnLog(File logDir) {
@@ -153,6 +156,7 @@ public class FileTxnLog implements TxnLog {
     /**
      * method to allow setting preallocate size
      * of log file to pad the file.
+     *
      * @param size the size to set to in bytes
      */
     public static void setPreallocSize(long size) {
@@ -161,6 +165,7 @@ public class FileTxnLog implements TxnLog {
 
     /**
      * creates a checksum alogrithm to be used
+     *
      * @return the checksum used for this txnlog
      */
     protected Checksum makeChecksumAlgorithm() {
@@ -170,6 +175,7 @@ public class FileTxnLog implements TxnLog {
 
     /**
      * rollover the current log file to a new one.
+     *
      * @throws IOException
      */
     public synchronized void rollLog() throws IOException {
@@ -182,6 +188,7 @@ public class FileTxnLog implements TxnLog {
 
     /**
      * close all the open file handles
+     *
      * @throws IOException
      */
     public synchronized void close() throws IOException {
@@ -195,12 +202,15 @@ public class FileTxnLog implements TxnLog {
 
     /**
      * append an entry to the transaction log
+     *
      * @param hdr the header of the transaction
      * @param txn the transaction part of the entry
-     * returns true iff something appended, otw false 
+     *            returns true iff something appended, otw false
+     *            将事物操作写入事物日志
      */
     public synchronized boolean append(TxnHeader hdr, Record txn)
             throws IOException {
+        //1确定是否有事物日志可写
         if (hdr == null) {
             return false;
         }
@@ -220,6 +230,7 @@ public class FileTxnLog implements TxnLog {
 
             logFileWrite = new File(logDir, Util.makeLogName(hdr.getZxid()));
             fos = new FileOutputStream(logFileWrite);
+            //事物序列化
             logStream = new BufferedOutputStream(fos);
             oa = BinaryOutputArchive.getArchive(logStream);
             FileHeader fhdr = new FileHeader(TXNLOG_MAGIC, VERSION, dbId);
@@ -229,14 +240,17 @@ public class FileTxnLog implements TxnLog {
             currentSize = fos.getChannel().position();
             streamsToFlush.add(fos);
         }
+        //确定事物日志文件是否需要扩容
         currentSize = padFile(fos.getChannel());
         byte[] buf = Util.marshallTxnEntry(hdr, txn);
         if (buf == null || buf.length == 0) {
             throw new IOException("Faulty serialization for header " +
                     "and txn");
         }
+        //4生成Checksum
         Checksum crc = makeChecksumAlgorithm();
         crc.update(buf, 0, buf.length);
+        //5写入事物日志文件流
         oa.writeLong(crc.getValue(), "txnEntryCRC");
         Util.writeTxnBytes(oa, buf);
 
@@ -245,6 +259,7 @@ public class FileTxnLog implements TxnLog {
 
     /**
      * pad the current file to increase its size to the next multiple of preAllocSize greater than the current size and position
+     *
      * @param fileChannel the fileChannel of the file to be padded
      * @throws IOException
      */
@@ -262,8 +277,8 @@ public class FileTxnLog implements TxnLog {
      * the current file position is sufficiently close (less than 4K) to end of
      * file and preAllocSize is > 0.
      *
-     * @param position the point in the file we have written to
-     * @param fileSize application keeps track of the current file size
+     * @param position     the point in the file we have written to
+     * @param fileSize     application keeps track of the current file size
      * @param preAllocSize how many bytes to pad
      * @return the new file size. It can be the same as fileSize if no
      * padding was done.
@@ -290,7 +305,8 @@ public class FileTxnLog implements TxnLog {
      * Find the log file that starts at, or just before, the snapshot. Return
      * this and all subsequent logs. Results are ordered by zxid of file,
      * ascending order.
-     * @param logDirList array of files
+     *
+     * @param logDirList   array of files
      * @param snapshotZxid return files at, or before this zxid
      * @return
      */
@@ -324,6 +340,7 @@ public class FileTxnLog implements TxnLog {
 
     /**
      * get the last zxid that was logged in the transaction logs
+     *
      * @return the last zxid logged in the transaction logs
      */
     public long getLastLoggedZxid() {
@@ -395,6 +412,7 @@ public class FileTxnLog implements TxnLog {
 
     /**
      * start reading all the transactions from the given zxid
+     *
      * @param zxid the zxid to start reading transactions from
      * @return returns an iterator to iterate through the transaction
      * logs
@@ -405,6 +423,7 @@ public class FileTxnLog implements TxnLog {
 
     /**
      * truncate the current transaction logs
+     *
      * @param zxid the zxid to truncate the logs to
      * @return true if successful false if not
      */
@@ -436,6 +455,7 @@ public class FileTxnLog implements TxnLog {
 
     /**
      * read the header of the transaction file
+     *
      * @param file the transaction file to read
      * @return header that was read fomr the file
      * @throws IOException
@@ -459,6 +479,7 @@ public class FileTxnLog implements TxnLog {
 
     /**
      * the dbid of this transaction database
+     *
      * @return the dbid of this database
      */
     public long getDbId() throws IOException {
@@ -472,6 +493,7 @@ public class FileTxnLog implements TxnLog {
 
     /**
      * the forceSync value. true if forceSync is enabled, false otherwise.
+     *
      * @return the forceSync value
      */
     public boolean isForceSync() {
@@ -479,10 +501,10 @@ public class FileTxnLog implements TxnLog {
     }
 
     /**
-     * a class that keeps track of the position 
+     * a class that keeps track of the position
      * in the input stream. The position points to offset
-     * that has been consumed by the applications. It can 
-     * wrap buffered input streams to provide the right offset 
+     * that has been consumed by the applications. It can
+     * wrap buffered input streams to provide the right offset
      * for the application.
      */
     static class PositionInputStream extends FilterInputStream {
@@ -568,8 +590,9 @@ public class FileTxnLog implements TxnLog {
 
         /**
          * create an iterator over a transaction database directory
+         *
          * @param logDir the transaction database directory
-         * @param zxid the zxid to start reading from
+         * @param zxid   the zxid to start reading from
          * @throws IOException
          */
         public FileTxnIterator(File logDir, long zxid) throws IOException {
@@ -581,6 +604,7 @@ public class FileTxnLog implements TxnLog {
         /**
          * initialize to the zxid specified
          * this is inclusive of the zxid
+         *
          * @throws IOException
          */
         void init() throws IOException {
@@ -607,6 +631,7 @@ public class FileTxnLog implements TxnLog {
 
         /**
          * go to the next logfile
+         *
          * @return true if there is one and false if there is no
          * new file to be read
          * @throws IOException
@@ -622,6 +647,7 @@ public class FileTxnLog implements TxnLog {
 
         /**
          * read the header from the inputarchive
+         *
          * @param ia the inputarchive to be read from
          * @param is the inputstream
          * @throws IOException
@@ -639,6 +665,7 @@ public class FileTxnLog implements TxnLog {
 
         /**
          * Invoked to indicate that the input stream has been created.
+         *
          * @param ia input archive
          * @param is file input stream associated with the input archive.
          * @throws IOException
@@ -656,6 +683,7 @@ public class FileTxnLog implements TxnLog {
 
         /**
          * create a checksum algorithm
+         *
          * @return the checksum algorithm
          */
         protected Checksum makeChecksumAlgorithm() {
@@ -664,6 +692,7 @@ public class FileTxnLog implements TxnLog {
 
         /**
          * the iterator that moves to the next transaction
+         *
          * @return true if there is more transactions to be read
          * false if not.
          */
@@ -708,6 +737,7 @@ public class FileTxnLog implements TxnLog {
 
         /**
          * reutrn the current header
+         *
          * @return the current header that
          * is read
          */
@@ -717,6 +747,7 @@ public class FileTxnLog implements TxnLog {
 
         /**
          * return the current transaction
+         *
          * @return the current transaction
          * that is read
          */
