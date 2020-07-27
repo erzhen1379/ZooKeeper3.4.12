@@ -90,7 +90,7 @@ import org.slf4j.LoggerFactory;
  */
 
 /**
- * 创建数据文件管理器
+ * 创建数据文件管理器1
  * 上层服务器和底层数据存储之间的对接层，提供一系列操作数据文件的接口，包括事物日志问题件和快照数据文件
  */
 public class FileTxnLog implements TxnLog {
