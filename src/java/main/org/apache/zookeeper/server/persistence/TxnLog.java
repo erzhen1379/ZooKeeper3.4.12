@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,13 +28,14 @@ import org.apache.zookeeper.txn.TxnHeader;
  *
  */
 public interface TxnLog {
-    
+
     /**
      * roll the current
      * log being appended to
-     * @throws IOException 
+     * @throws IOException
      */
     void rollLog() throws IOException;
+
     /**
      * Append a request to the transaction log
      * @param hdr the transaction header
@@ -53,40 +54,42 @@ public interface TxnLog {
      * @throws IOException
      */
     TxnIterator read(long zxid) throws IOException;
-    
+
     /**
      * the last zxid of the logged transactions.
      * @return the last zxid of the logged transactions.
      * @throws IOException
      */
     long getLastLoggedZxid() throws IOException;
-    
+
     /**
      * truncate the log to get in sync with the 
      * leader.
      * @param zxid the zxid to truncate at.
-     * @throws IOException 
+     * @throws IOException
+     * 删除最新的zxid
      */
     boolean truncate(long zxid) throws IOException;
-    
+
     /**
      * the dbid for this transaction log. 
      * @return the dbid for this transaction log.
      * @throws IOException
      */
     long getDbId() throws IOException;
-    
+
     /**
      * commmit the trasaction and make sure
      * they are persisted
      * @throws IOException
      */
     void commit() throws IOException;
-   
-    /** 
+
+    /**
      * close the transactions logs
      */
     void close() throws IOException;
+
     /**
      * an iterating interface for reading 
      * transaction logs. 
@@ -97,19 +100,19 @@ public interface TxnLog {
          * @return return the transaction header.
          */
         TxnHeader getHeader();
-        
+
         /**
          * return the transaction record.
          * @return return the transaction record.
          */
         Record getTxn();
-     
+
         /**
          * go to the next transaction record.
          * @throws IOException
          */
         boolean next() throws IOException;
-        
+
         /**
          * close files and release the 
          * resources

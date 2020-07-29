@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.zookeeper.txn.TxnHeader;
 
 /**
- * A collection of utility methods for dealing with file name parsing, 
+ * A collection of utility methods for dealing with file name parsing,
  * low level I/O file operations and marshalling/unmarshalling.
  * 辅助工具类
  */
@@ -61,12 +61,12 @@ public class Util {
     }
 
     /**
-     * Given two directory files the method returns a well-formed 
+     * Given two directory files the method returns a well-formed
      * logfile provider URI. This method is for backward compatibility with the
      * existing code that only supports logfile persistence and expects these two
      * parameters passed either on the command-line or in the configuration file.
      *
-     * @param dataDir snapshot directory
+     * @param dataDir    snapshot directory
      * @param dataLogDir transaction log directory
      * @return logfile provider URI
      */
@@ -79,7 +79,7 @@ public class Util {
     }
 
     /**
-     * Creates a valid transaction log file name. 
+     * Creates a valid transaction log file name.
      *
      * @param zxid used as a file name suffix (extention)
      * @return file name
@@ -132,7 +132,7 @@ public class Util {
      * Extracts zxid from the file name. The file name should have been created
      * using one of the {@link makeLogName} or {@link makeSnapshotName}.
      *
-     * @param name the file name to parse
+     * @param name   the file name to parse
      * @param prefix the file name prefix (snapshot or log)
      * @return zxid
      */
@@ -149,10 +149,10 @@ public class Util {
     }
 
     /**
-     * Verifies that the file is a valid snapshot. Snapshot may be invalid if 
+     * Verifies that the file is a valid snapshot. Snapshot may be invalid if
      * it's incomplete as in a situation when the server dies while in the process
-     * of storing a snapshot. Any file that is not a snapshot is also 
-     * an invalid snapshot. 
+     * of storing a snapshot. Any file that is not a snapshot is also
+     * an invalid snapshot.
      *
      * @param f file to verify
      * @return true if the snapshot is valid
@@ -200,6 +200,7 @@ public class Util {
 
     /**
      * Reads a transaction entry from the input archive.
+     *
      * @param ia archive to read from
      * @return null if the entry is corrupted or EOF has been reached; a buffer
      * (possible empty) containing serialized transaction record.
@@ -246,7 +247,7 @@ public class Util {
     /**
      * Write the serialized transaction record to the output archive.
      *
-     * @param oa output archive
+     * @param oa    output archive
      * @param bytes serialized trasnaction record
      * @throws IOException
      */
@@ -273,6 +274,12 @@ public class Util {
             this.ascending = ascending;
         }
 
+        /**
+         * 比较两个文件
+         * @param o1
+         * @param o2
+         * @return
+         */
         public int compare(File o1, File o2) {
             long z1 = Util.getZxidFromName(o1.getName(), prefix);
             long z2 = Util.getZxidFromName(o2.getName(), prefix);
@@ -285,17 +292,20 @@ public class Util {
      * Sort the list of files. Recency as determined by the version component
      * of the file name.
      *
-     * @param files array of files
-     * @param prefix files not matching this prefix are assumed to have a
-     * version = -1)
+     * @param files     array of files
+     * @param prefix    files not matching this prefix are assumed to have a
+     *                  version = -1)
      * @param ascending true sorted in ascending order, false results in
-     * descending order
+     *                  descending order
      * @return sorted input files
      */
     public static List<File> sortDataDir(File[] files, String prefix, boolean ascending) {
         if (files == null)
             return new ArrayList<File>(0);
+        //将数组转化为list集合
         List<File> filelist = Arrays.asList(files);
+        //文件排序操作
+        //比较函数类
         Collections.sort(filelist, new DataDirFileComparator(prefix, ascending));
         return filelist;
     }

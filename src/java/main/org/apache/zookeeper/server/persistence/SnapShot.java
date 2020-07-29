@@ -55,6 +55,7 @@ public interface SnapShot {
      * find the most recent snapshot file
      * @return the most recent snapshot file
      * @throws IOException
+     *  加载最新文件
      */
     File findMostRecentSnapshot() throws IOException;
     

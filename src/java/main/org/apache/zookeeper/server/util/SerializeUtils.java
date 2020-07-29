@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,7 @@ import org.apache.zookeeper.txn.MultiTxn;
 
 public class SerializeUtils {
     private static final Logger LOG = LoggerFactory.getLogger(SerializeUtils.class);
-    
+
     public static Record deserializeTxn(byte txnBytes[], TxnHeader hdr)
             throws IOException {
         final ByteArrayInputStream bais = new ByteArrayInputStream(txnBytes);
@@ -57,41 +57,41 @@ public class SerializeUtils {
         bais.mark(bais.available());
         Record txn = null;
         switch (hdr.getType()) {
-        case OpCode.createSession:
-            // This isn't really an error txn; it just has the same
-            // format. The error represents the timeout
-            txn = new CreateSessionTxn();
-            break;
-        case OpCode.closeSession:
-            return null;
-        case OpCode.create:
-            txn = new CreateTxn();
-            break;
-        case OpCode.delete:
-            txn = new DeleteTxn();
-            break;
-        case OpCode.setData:
-            txn = new SetDataTxn();
-            break;
-        case OpCode.setACL:
-            txn = new SetACLTxn();
-            break;
-        case OpCode.error:
-            txn = new ErrorTxn();
-            break;
-        case OpCode.multi:
-            txn = new MultiTxn();
-            break;
-        default:
-            throw new IOException("Unsupported Txn with type=%d" + hdr.getType());
+            case OpCode.createSession:
+                // This isn't really an error txn; it just has the same
+                // format. The error represents the timeout
+                txn = new CreateSessionTxn();
+                break;
+            case OpCode.closeSession:
+                return null;
+            case OpCode.create:
+                txn = new CreateTxn();
+                break;
+            case OpCode.delete:
+                txn = new DeleteTxn();
+                break;
+            case OpCode.setData:
+                txn = new SetDataTxn();
+                break;
+            case OpCode.setACL:
+                txn = new SetACLTxn();
+                break;
+            case OpCode.error:
+                txn = new ErrorTxn();
+                break;
+            case OpCode.multi:
+                txn = new MultiTxn();
+                break;
+            default:
+                throw new IOException("Unsupported Txn with type=%d" + hdr.getType());
         }
         if (txn != null) {
             try {
                 txn.deserialize(ia, "txn");
-            } catch(EOFException e) {
+            } catch (EOFException e) {
                 // perhaps this is a V0 Create
                 if (hdr.getType() == OpCode.create) {
-                    CreateTxn create = (CreateTxn)txn;
+                    CreateTxn create = (CreateTxn) txn;
                     bais.reset();
                     CreateTxnV0 createv0 = new CreateTxnV0();
                     createv0.deserialize(ia, "txn");
@@ -110,9 +110,19 @@ public class SerializeUtils {
         return txn;
     }
 
-    public static void deserializeSnapshot(DataTree dt,InputArchive ia,
-            Map<Long, Integer> sessions) throws IOException {
+    /**
+     * 反序列化
+     *
+     * @param dt
+     * @param ia
+     * @param sessions
+     * @throws IOException
+     */
+    public static void deserializeSnapshot(DataTree dt, InputArchive ia,
+                                           Map<Long, Integer> sessions) throws IOException {
+        //先反序列化count操作
         int count = ia.readInt("count");
+        //根据count操作将数据反序列化session的id和超时时间
         while (count > 0) {
             long id = ia.readLong("id");
             int to = ia.readInt("timeout");
@@ -120,18 +130,29 @@ public class SerializeUtils {
             if (LOG.isTraceEnabled()) {
                 ZooTrace.logTraceMessage(LOG, ZooTrace.SESSION_TRACE_MASK,
                         "loadData --- session in archive: " + id
-                        + " with timeout: " + to);
+                                + " with timeout: " + to);
             }
             count--;
         }
         dt.deserialize(ia, "tree");
     }
 
-    public static void serializeSnapshot(DataTree dt,OutputArchive oa,
-            Map<Long, Integer> sessions) throws IOException {
+    /**
+     * 序列化实体
+     *
+     * @param dt
+     * @param oa
+     * @param sessions
+     * @throws IOException
+     */
+    public static void serializeSnapshot(DataTree dt, OutputArchive oa,
+                                         Map<Long, Integer> sessions) throws IOException {
+        //创建一个sessions转化为HashMap,并且将其序列化
         HashMap<Long, Integer> sessSnap = new HashMap<Long, Integer>(sessions);
+        //记录sessSnap大小
         oa.writeInt(sessSnap.size(), "count");
         for (Entry<Long, Integer> entry : sessSnap.entrySet()) {
+            //将session的id和超时时间timeout进行序列化
             oa.writeLong(entry.getKey().longValue(), "id");
             oa.writeInt(entry.getValue().intValue(), "timeout");
         }
